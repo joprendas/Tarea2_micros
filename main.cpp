@@ -6,33 +6,36 @@
 using namespace std;
 using namespace chrono;
 
-#define CHIPNAME "gpiochip0"
-#define START_LINE 17   // Botón
-#define LED_LINE 27     // LED
+#define CHIP "/dev/gpiochip0"
+#define START_LINE 17
+#define LED_LINE 27
 
 void fibonacci();
 void tablas();
 
 int main()
 {
-    gpiod_chip *chip = gpiod_chip_open_by_name(CHIPNAME);
+    gpiod_chip *chip = gpiod_chip_open(CHIP);
+    if (!chip) {
+        cout << "Error abriendo GPIO" << endl;
+        return 1;
+    }
 
+    // Solicitar líneas
     gpiod_line *start = gpiod_chip_get_line(chip, START_LINE);
     gpiod_line *led = gpiod_chip_get_line(chip, LED_LINE);
 
-    gpiod_line_request_input(start, "start_button");
+    gpiod_line_request_input(start, "start");
     gpiod_line_request_output(led, "led", 0);
 
-    cout << "Esperando señal de inicio..." << endl;
+    cout << "Esperando botón..." << endl;
 
-    // Esperar botón
     while (gpiod_line_get_value(start) == 0);
 
-    cout << "Inicio detectado!" << endl;
+    cout << "Inicio!" << endl;
 
     auto inicio = high_resolution_clock::now();
 
-    // -------- PARALELO --------
     thread t1(fibonacci);
     thread t2(tablas);
 
@@ -44,10 +47,9 @@ int main()
 
     cout << "Tiempo total: " << tiempo.count() << " ms" << endl;
 
-    // Encender LED
     gpiod_line_set_value(led, 1);
 
-    cout << "LED encendido - Programa finalizado" << endl;
+    cout << "LED encendido" << endl;
 
     gpiod_chip_close(chip);
 
