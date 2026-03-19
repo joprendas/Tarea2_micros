@@ -13,13 +13,9 @@ int main()
 {
     cout << "Esperando botón..." << endl;
 
-    // Esperar señal en GPIO 17
-    while (true)
-    {
-        int estado = system("gpioget gpiochip0 17");
-
-        if (estado == 0) break;  // botón presionado
-    }
+    // Espera un flanco de bajada en GPIO 17
+    // Útil si el botón está normalmente en HIGH y al presionarlo pasa a LOW
+    system("gpiomon --num-events=1 --edges=falling gpiochip0 17");
 
     cout << "Inicio!" << endl;
 
@@ -37,8 +33,10 @@ int main()
 
     cout << "Tiempo total: " << tiempo.count() << " ms" << endl;
 
-    // Encender LED en GPIO 27
-    system("gpioset gpiochip0 27=1");
+    cout << "Encendiendo LED..." << endl;
+
+    // Enciende LED en GPIO 27 y lo mantiene encendido
+    system("gpioset --background gpiochip0 27=1");
 
     cout << "LED encendido" << endl;
 
